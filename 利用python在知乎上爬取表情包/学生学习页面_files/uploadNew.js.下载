@@ -1,0 +1,126 @@
+var bindImg2 = function(id) {
+    var buttonId = id;
+    var imgs = "images_" + id;
+    var uploader = new plupload.Uploader(
+        {
+            runtimes : 'html5,flash',
+            filters : [{
+                title : ' ',
+                extensions : 'jpg,jpeg,gif,png'
+            }],
+            browse_button : buttonId,
+            max_file_size : '4000000B',
+            url : 'https://mooc-upload-ans.chaoxing.com/upload/edit/upload-image?uid='
+                + getcookie("_uid"),
+            flash_swf_url : '/space/new/way-upload/Moxie.swf',
+            headers : {
+                "Access-Control-Request-Method" : "POST"
+            },
+        });
+    uploader.bind('Init', function(up, params) {
+    });
+    uploader.init();
+    //当文件添加到上传队列后触发
+    uploader.bind('FilesAdded', function(up, files) {
+        var imgcount = $("#" + imgs).find("img").size();
+        if ((imgcount + files.length) > 20) {
+            alert("最多能上传20张图片");
+            $.each(files, function(i, file) {
+                if (file != null) {
+                    uploader.removeFile(file);
+                }
+            });
+            uploader.start();
+            return false;
+        }
+        up.refresh();
+        uploader.start();
+        try {
+            $("#courseStatus").text("上传中...");
+            $("#courseProBar").css("width", "0");
+        } catch (ex) {
+        }
+    });
+    //当发生错误时触发
+    uploader.bind('Error', function(up, err) {
+        alert("上传失败");
+    });
+    //当队列中的某一个文件上传完成后触发
+    uploader.bind('FileUploaded', function(up, file, rep) {
+        rep = JSON.stringify(rep);
+        uploadLandCover_upload_success_handler2(buttonId, file, rep);
+    });
+}
+
+
+var uploadLandCover_upload_success_handler2 = function(id, file, serverData) {
+    var imgcount = $("#images_" + id).find("img").size();
+    if (imgcount > 20) {
+        return;
+    }
+    try {
+        $("#courseStatus").text("已完成");
+        $("#courseProBar").css("width", "100%");
+        //后台传递回来的内容
+        var orgin_url = serverData.split("_")[1];
+        var url = orgin_url.replace("/origin/", "/74_89c/");
+        var content = $("#images_" + id).html();
+        if (id == "fileUploader_group") {
+            var in1 = "<input type='hidden' name='files' value='"
+                + orgin_url
+                + "'/><a href='javascript:;'><img src='"
+                + orgin_url
+                + "' width='74' height='89'/><b onclick=removeinput(this);>X</b></a>"
+            $(".listTop").animate({
+                height : "300px"
+            }, 200);
+            $("#images_" + id).html(content + in1);
+        } else {
+            var in1 = "<input type='hidden' name='files' value='"
+                + orgin_url
+                + "'/><a href='javascript:;'><img src='"
+                + orgin_url
+                + "' width='74' height='89'/><b onclick=removeinput(this);>X</b></a>"
+            $("#images_" + id).html(content + in1);
+        }
+        $("#loading_" + id).css('display', 'none');
+        var resize = $("#resize").val();
+        if(typeof(resize) != "undefined" && resize != '' && id == 'fileUploader_group' && imgcount > 0){
+            resizeHigh('newPic');
+        }
+    } catch (ex) {
+        this.debug(ex);
+    }
+}
+
+function getcookie(objname){
+    var arrstr = document.cookie.split("; ");
+    for(var i = 0;i < arrstr.length;i ++){
+        var temp = arrstr[i].split("=");
+        if(temp[0] == objname){
+            return unescape(temp[1]);
+        }
+    }
+}
+
+function resizeHigh(tagClassName){
+    var content = document.getElementsByClassName(tagClassName);
+    var curheight = content.item(0).style.height;
+    content.item(0).style.height = "420px";
+}
+
+var removeinput=function(obj){
+    var spanObj=jQuery(obj).parent();
+    var inputObj=jQuery(obj).parent().prev();
+    spanObj.remove();
+    inputObj.remove();
+    var imgcount=jQuery("#images_fileUploader_group").find("img").size();
+    var attachmentsSize = document.getElementsByName("attachment").length;
+    if(imgcount==0){
+        if (attachmentsSize == 0) {
+            jQuery(".listTop").animate({height:"200px"},300);
+        } else {
+            jQuery(".listTop").animate({height:"340px"},300);
+        }
+    }
+}

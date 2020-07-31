@@ -1,0 +1,87 @@
+/*
+function ed_complete(){	
+	var p = parent;
+	
+	console.log('flash call ed_complete');
+	
+	while(p){
+		if(p.onReadComplete){
+			console.log('call ed_complete to onReadComplete');
+			p.onReadComplete();
+			break;
+		}
+		
+		if(p.parent==p){
+			break;
+		}
+		
+		p = p.parent;
+	}
+}*/
+
+function ed_complete(){
+	if(typeof console == 'object')
+		console.log('inner call ed_complete');
+		
+	var p = parent;
+	
+	while(p){
+		if(p.JC && typeof window._jobindex == 'number'){
+			if(typeof console == 'object')
+				console.log('inner call JC.completed('+ window._jobindex+')');
+			
+			p.JC.completed(window._jobindex);
+			break;
+		}
+		
+		if(p.parent==p){
+			break;
+		}
+		
+		p = p.parent;
+	}	
+}
+
+function ed_reinitIframe(){
+	var iframe = document.getElementById("frame_content");
+	
+	try{
+		var bHeight = iframe.contentWindow.document.body.scrollHeight;			
+		var dHeight = iframe.contentWindow.document.documentElement.scrollHeight;			
+		var height = Math.max(bHeight, dHeight);
+		if (navigator.userAgent.indexOf("ChaoXingStudy") > 0) {
+			if (height < 200) {
+				height = height + 120;
+			}
+		}
+		window.frameElement.style['height'] = height + 'px';
+	}catch (ex){}
+}
+
+
+function dynIframeSize(obj) {
+	
+	var subWeb = window.frames['frame_content'].document || window.frames['frame_content'].contentDocument || obj.document || obj.contentDocument;
+	
+	if(obj != null && subWeb != null) {
+		obj.style['height'] = subWeb.body.scrollHeight + 'px';
+	} 
+} 
+
+
+function render_iframe(b){
+	if(window.frameElement){
+		 _src = window.frameElement.getAttribute('_src');
+	}
+	var event = b?"onload=\"dynIframeSize(this);\"":"";
+	var src = "";
+	if (window.frameElement) {
+		src = window.frameElement.getAttribute('src');
+	}
+	if (src.indexOf("microCourse") > -1) {
+		document.write('<iframe id="frame_content" name="frame_content" src="'+_src+'" frameborder="0" scrolling="auto" style="height:500px;width:650px;"' + event + '></iframe>');
+	} else {
+		document.write('<iframe id="frame_content" name="frame_content" src="'+_src+'" frameborder="0" scrolling="auto" ' + event + '></iframe>');
+	}
+	window.setInterval("ed_reinitIframe()", 200);
+}
